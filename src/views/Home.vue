@@ -58,9 +58,12 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import RwvTag from "@/components/VTag";
 import { FETCH_TAGS } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
+import { homeStore } from "@/store/home.module";
+const home_store = homeStore();
 
 export default {
   name: "home",
@@ -68,10 +71,11 @@ export default {
     RwvTag
   },
   mounted() {
-    this.$store.dispatch(FETCH_TAGS);
+    home_store[FETCH_TAGS]();
   },
   computed: {
-    ...mapGetters(["isAuthenticated", "tags"]),
+    ...mapState(authStore, ["isAuthenticated"]),
+    ...mapState(homeStore, ["tags"]),
     tag() {
       return this.$route.params.tag;
     }

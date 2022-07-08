@@ -73,20 +73,24 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import {
   FETCH_PROFILE,
   FETCH_PROFILE_FOLLOW,
   FETCH_PROFILE_UNFOLLOW
 } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
+import { profileStore } from "@/store/profile.module";
 
+const profile_store = profileStore();
 export default {
   name: "RwvProfile",
   mounted() {
-    this.$store.dispatch(FETCH_PROFILE, this.$route.params);
+    profile_store[FETCH_PROFILE](this.$route.params);
   },
   computed: {
-    ...mapGetters(["currentUser", "profile", "isAuthenticated"])
+    ...mapState(authStore, ["currentUser", "isAuthenticated"]),
+    ...mapState(profileStore, ["profile"])
   },
   methods: {
     isCurrentUser() {
@@ -97,15 +101,15 @@ export default {
     },
     follow() {
       if (!this.isAuthenticated) return;
-      this.$store.dispatch(FETCH_PROFILE_FOLLOW, this.$route.params);
+      profile_store[FETCH_PROFILE_FOLLOW](this.$route.params);
     },
     unfollow() {
-      this.$store.dispatch(FETCH_PROFILE_UNFOLLOW, this.$route.params);
+      profile_store[FETCH_PROFILE_UNFOLLOW](this.$route.params);
     }
   },
   watch: {
-    $route(to) {
-      this.$store.dispatch(FETCH_PROFILE, to.params);
+    $route() {
+      profile_store[FETCH_PROFILE](this.$route.params);
     }
   }
 };

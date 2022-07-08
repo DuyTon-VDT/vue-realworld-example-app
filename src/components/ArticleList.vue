@@ -16,10 +16,12 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import RwvArticlePreview from "./VArticlePreview";
 import VPagination from "./VPagination";
 import { FETCH_ARTICLES } from "../store/actions.type";
+import { homeStore } from "@/store/home.module";
+const home_store = homeStore();
 
 export default {
   name: "RwvArticleList",
@@ -83,9 +85,9 @@ export default {
       }
       return [
         ...Array(Math.ceil(this.articlesCount / this.itemsPerPage)).keys()
-      ].map(e => e + 1);
+      ].map((e) => e + 1);
     },
-    ...mapGetters(["articlesCount", "isLoading", "articles"])
+    ...mapState(homeStore, ["articlesCount", "isLoading", "articles"])
   },
   watch: {
     currentPage(newValue) {
@@ -114,7 +116,7 @@ export default {
   },
   methods: {
     fetchArticles() {
-      this.$store.dispatch(FETCH_ARTICLES, this.listConfig);
+      home_store[FETCH_ARTICLES](this.listConfig);
     },
     resetPagination() {
       this.listConfig.offset = 0;

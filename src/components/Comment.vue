@@ -22,8 +22,11 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import { COMMENT_DESTROY } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
+import { articleStore } from "@/store/article.module";
+const article_store = articleStore();
 
 export default {
   name: "RwvComment",
@@ -38,11 +41,11 @@ export default {
       }
       return false;
     },
-    ...mapGetters(["currentUser"])
+    ...mapState(authStore, ["currentUser"])
   },
   methods: {
     destroy(slug, commentId) {
-      this.$store.dispatch(COMMENT_DESTROY, { slug, commentId });
+      article_store[COMMENT_DESTROY]({ slug, commentId });
     }
   }
 };
