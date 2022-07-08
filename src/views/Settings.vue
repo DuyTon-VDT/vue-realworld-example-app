@@ -1,61 +1,74 @@
 <template>
-  <div class="settings-page">
-    <div class="container page">
-      <div class="row">
-        <div class="col-md-6 offset-md-3 col-xs-12">
-          <h1 class="text-xs-center">Your Settings</h1>
+  <div class="flex-1 bg-light dark:bg-[#1c1c28] dark:text-[#F7F7F7]">
+    <div
+      class="mx-auto px-4 sm:max-w-[576px] md:max-w-[720px] lg:max-w-[1140px] mt-6"
+    >
+      <div class="flex flex-wrap -mx-4">
+        <div class="w-full px-4 md:w-[50%] md:mx-auto">
+          <h1
+            class="text-2xl font-semibold text-[#280d5f] text-center my-4 dark:text-[#F7F7F7]"
+          >
+            Your Settings
+          </h1>
           <form @submit.prevent="updateSettings()">
-            <fieldset>
-              <fieldset class="form-group">
+            <fieldset class="flex flex-col space-y-2">
+              <fieldset class="">
                 <input
-                  class="form-control"
+                  class="bg-[#eeeaf4] rounded-2xl px-4 h-10 text-base border border-[#d7caec] placeholder-[#7a6eaa] w-full outline-none focus:shadow-input dark:bg-[#372f47] dark:border-gray-800"
                   type="text"
                   v-model="currentUser.image"
                   placeholder="URL of profile picture"
                 />
               </fieldset>
-              <fieldset class="form-group">
+              <fieldset class="">
                 <input
-                  class="form-control form-control-lg"
+                  class="bg-[#eeeaf4] rounded-2xl px-4 h-10 text-base border border-[#d7caec] placeholder-[#7a6eaa] w-full outline-none focus:shadow-input dark:bg-[#372f47] dark:border-gray-800"
                   type="text"
                   v-model="currentUser.username"
                   placeholder="Your username"
                 />
               </fieldset>
-              <fieldset class="form-group">
+              <fieldset class="">
                 <textarea
-                  class="form-control form-control-lg"
+                  class="bg-[#eeeaf4] rounded-2xl px-4 text-base border border-[#d7caec] placeholder-[#7a6eaa] w-full outline-none focus:shadow-input dark:bg-[#372f47] dark:border-gray-800"
                   rows="8"
                   v-model="currentUser.bio"
                   placeholder="Short bio about you"
                 ></textarea>
               </fieldset>
-              <fieldset class="form-group">
+              <fieldset class="">
                 <input
-                  class="form-control form-control-lg"
+                  class="bg-[#eeeaf4] rounded-2xl px-4 h-10 text-base border border-[#d7caec] placeholder-[#7a6eaa] w-full outline-none focus:shadow-input dark:bg-[#372f47] dark:border-gray-800"
                   type="text"
                   v-model="currentUser.email"
                   placeholder="Email"
                 />
               </fieldset>
-              <fieldset class="form-group">
+              <fieldset class="flex flex-col">
                 <input
-                  class="form-control form-control-lg"
+                  class="bg-[#eeeaf4] rounded-2xl px-4 h-10 text-base border border-[#d7caec] placeholder-[#7a6eaa] w-full outline-none focus:shadow-input dark:bg-[#372f47] dark:border-gray-800"
                   type="password"
                   v-model="currentUser.password"
                   placeholder="Password"
                 />
               </fieldset>
-              <button class="btn btn-lg btn-primary pull-xs-right">
+              <button
+                class="float-right h-12 bg-[#1fc7d4] px-6 text-white font-bold rounded-2xl text-base"
+              >
                 Update Settings
               </button>
             </fieldset>
           </form>
           <!-- Line break for logout button -->
-          <hr />
-          <button @click="logout" class="btn btn-outline-danger">
-            Or click here to logout.
-          </button>
+          <hr class="my-2" />
+          <div class="w-full flex items-center justify-center">
+            <button
+              @click="logout"
+              class="float-left h-12 bg-red-300 px-6 text-white font-bold rounded-2xl text-base"
+            >
+              Or click here to logout.
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -63,23 +76,24 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import { LOGOUT, UPDATE_USER } from "@/store/actions.type";
-
+import { authStore } from "@/store/auth.module";
+const auth_store = authStore();
 export default {
   name: "RwvSettings",
   computed: {
-    ...mapGetters(["currentUser"])
+    ...mapState(authStore, ["currentUser"])
   },
   methods: {
     updateSettings() {
-      this.$store.dispatch(UPDATE_USER, this.currentUser).then(() => {
+      auth_store[UPDATE_USER](this.currentUser).then(() => {
         // #todo, nice toast and no redirect
         this.$router.push({ name: "home" });
       });
     },
     logout() {
-      this.$store.dispatch(LOGOUT).then(() => {
+      auth_store[LOGOUT]().then(() => {
         this.$router.push({ name: "home" });
       });
     }

@@ -35,9 +35,12 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import RwvArticleActions from "@/components/ArticleActions";
 import { FAVORITE_ADD, FAVORITE_REMOVE } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
+import { articleStore } from "@/store/article.module";
+const article_store = articleStore();
 
 export default {
   name: "RwvArticleMeta",
@@ -56,7 +59,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(["currentUser", "isAuthenticated"])
+    ...mapState(authStore, ["currentUser", "isAuthenticated"])
   },
   methods: {
     isCurrentUser() {
@@ -71,7 +74,7 @@ export default {
         return;
       }
       const action = this.article.favorited ? FAVORITE_REMOVE : FAVORITE_ADD;
-      this.$store.dispatch(action, this.article.slug);
+      article_store[action](this.article.slug);
     }
   }
 };

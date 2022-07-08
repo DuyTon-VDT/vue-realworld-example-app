@@ -22,6 +22,8 @@
 <script>
 import RwvListErrors from "./ListErrors.vue";
 import { COMMENT_CREATE } from "../store/actions.type.js";
+import { articleStore } from "@/store/article.module";
+const article_store = articleStore();
 
 export default {
   name: "RwvCommentEditor",
@@ -39,8 +41,7 @@ export default {
   },
   methods: {
     onSubmit(slug, comment) {
-      this.$store
-        .dispatch(COMMENT_CREATE, { slug, comment })
+      article_store[COMMENT_CREATE]({ slug, comment })
         .then(() => {
           this.comment = null;
           this.errors = {};

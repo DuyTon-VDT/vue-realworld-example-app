@@ -1,3 +1,4 @@
+import { defineStore } from "pinia";
 import ApiService from "@/common/api.service";
 import JwtService from "@/common/jwt.service";
 import {
@@ -5,69 +6,70 @@ import {
   LOGOUT,
   REGISTER,
   CHECK_AUTH,
-  UPDATE_USER
+  UPDATE_USER,
+  SET_AUTH,
+  PURGE_AUTH,
+  SET_ERROR
 } from "./actions.type";
-import { SET_AUTH, PURGE_AUTH, SET_ERROR } from "./mutations.type";
 
-const state = {
-  errors: null,
-  user: {},
-  isAuthenticated: !!JwtService.getToken()
+const state = () => {
+  return {
+    errors: null,
+    user: {},
+    isAuthenticated: !!JwtService.getToken()
+  };
 };
 
 const getters = {
   currentUser(state) {
     return state.user;
-  },
-  isAuthenticated(state) {
-    return state.isAuthenticated;
   }
 };
 
 const actions = {
-  [LOGIN](context, credentials) {
-    return new Promise(resolve => {
+  [LOGIN](credentials) {
+    return new Promise((resolve) => {
       ApiService.post("users/login", { user: credentials })
         .then(({ data }) => {
-          context.commit(SET_AUTH, data.user);
+          this[SET_AUTH](data.user);
           resolve(data);
         })
         .catch(({ response }) => {
-          context.commit(SET_ERROR, response.data.errors);
+          this[SET_ERROR](response.data.errors);
         });
     });
   },
-  [LOGOUT](context) {
-    context.commit(PURGE_AUTH);
+  [LOGOUT]() {
+    this[PURGE_AUTH]();
   },
-  [REGISTER](context, credentials) {
+  [REGISTER](credentials) {
     return new Promise((resolve, reject) => {
       ApiService.post("users", { user: credentials })
         .then(({ data }) => {
-          context.commit(SET_AUTH, data.user);
+          this[SET_AUTH](data.user);
           resolve(data);
         })
         .catch(({ response }) => {
-          context.commit(SET_ERROR, response.data.errors);
+          this[SET_ERROR](response.data.errors);
           reject(response);
         });
     });
   },
-  [CHECK_AUTH](context) {
+  [CHECK_AUTH]() {
     if (JwtService.getToken()) {
       ApiService.setHeader();
       ApiService.get("user")
         .then(({ data }) => {
-          context.commit(SET_AUTH, data.user);
+          this[SET_AUTH](data.user);
         })
         .catch(({ response }) => {
-          context.commit(SET_ERROR, response.data.errors);
+          this[SET_ERROR](response.data.errors);
         });
     } else {
-      context.commit(PURGE_AUTH);
+      this[PURGE_AUTH]();
     }
   },
-  [UPDATE_USER](context, payload) {
+  [UPDATE_USER](payload) {
     const { email, username, password, image, bio } = payload;
     const user = {
       email,
@@ -80,33 +82,29 @@ const actions = {
     }
 
     return ApiService.put("user", user).then(({ data }) => {
-      context.commit(SET_AUTH, data.user);
+      this[SET_AUTH](data.user);
       return data;
     });
-  }
-};
-
-const mutations = {
-  [SET_ERROR](state, error) {
-    state.errors = error;
   },
-  [SET_AUTH](state, user) {
-    state.isAuthenticated = true;
-    state.user = user;
-    state.errors = {};
-    JwtService.saveToken(state.user.token);
+  [SET_ERROR](error) {
+    this.errors = error;
   },
-  [PURGE_AUTH](state) {
-    state.isAuthenticated = false;
-    state.user = {};
-    state.errors = {};
+  [SET_AUTH](user) {
+    this.isAuthenticated = true;
+    this.user = user;
+    this.errors = {};
+    JwtService.saveToken(this.user.token);
+  },
+  [PURGE_AUTH]() {
+    this.isAuthenticated = false;
+    this.user = {};
+    this.errors = {};
     JwtService.destroyToken();
   }
 };
 
-export default {
+export const authStore = defineStore("auth", {
   state,
   actions,
-  mutations,
   getters
-};
+});

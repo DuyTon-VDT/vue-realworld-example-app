@@ -1,71 +1,59 @@
+import { defineStore } from "pinia";
 import { TagsService, ArticlesService } from "@/common/api.service";
-import { FETCH_ARTICLES, FETCH_TAGS } from "./actions.type";
 import {
+  FETCH_ARTICLES,
+  FETCH_TAGS,
   FETCH_START,
   FETCH_END,
   SET_TAGS,
   UPDATE_ARTICLE_IN_LIST
-} from "./mutations.type";
+} from "./actions.type";
 
-const state = {
-  tags: [],
-  articles: [],
-  isLoading: true,
-  articlesCount: 0
+const state = () => {
+  return {
+    tags: [],
+    articles: [],
+    isLoading: true,
+    articlesCount: 0
+  };
 };
 
-const getters = {
-  articlesCount(state) {
-    return state.articlesCount;
-  },
-  articles(state) {
-    return state.articles;
-  },
-  isLoading(state) {
-    return state.isLoading;
-  },
-  tags(state) {
-    return state.tags;
-  }
-};
+const getters = {};
 
 const actions = {
-  [FETCH_ARTICLES]({ commit }, params) {
-    commit(FETCH_START);
+  [FETCH_ARTICLES](params) {
+    this[FETCH_START]();
     return ArticlesService.query(params.type, params.filters)
       .then(({ data }) => {
-        commit(FETCH_END, data);
+        this[FETCH_END](data);
       })
-      .catch(error => {
+      .catch((error) => {
         throw new Error(error);
       });
   },
-  [FETCH_TAGS]({ commit }) {
+  [FETCH_TAGS]() {
     return TagsService.get()
       .then(({ data }) => {
-        commit(SET_TAGS, data.tags);
+        this[SET_TAGS](data.tags);
       })
-      .catch(error => {
+      .catch((error) => {
         throw new Error(error);
       });
-  }
-};
-
-/* eslint no-param-reassign: ["error", { "props": false }] */
-const mutations = {
-  [FETCH_START](state) {
-    state.isLoading = true;
   },
-  [FETCH_END](state, { articles, articlesCount }) {
-    state.articles = articles;
-    state.articlesCount = articlesCount;
-    state.isLoading = false;
+  /* eslint no-param-reassign: ["error", { "props": false }] */
+  [FETCH_START]() {
+    this.isLoading = true;
   },
-  [SET_TAGS](state, tags) {
-    state.tags = tags;
+  [FETCH_END]({ articles, articlesCount }) {
+    this.articles = articles;
+    this.articlesCount = articlesCount;
+    this.isLoading = false;
   },
-  [UPDATE_ARTICLE_IN_LIST](state, data) {
-    state.articles = state.articles.map(article => {
+  [SET_TAGS](tags) {
+    this.tags = tags;
+  },
+  [UPDATE_ARTICLE_IN_LIST](data) {
+    this.articles = this.articles.map((article) => {
       if (article.slug !== data.slug) {
         return article;
       }
@@ -79,9 +67,8 @@ const mutations = {
   }
 };
 
-export default {
+export const homeStore = defineStore("home", {
   state,
-  getters,
   actions,
-  mutations
-};
+  getters
+});

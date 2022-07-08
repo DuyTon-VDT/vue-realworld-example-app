@@ -40,9 +40,10 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
 import { LOGIN } from "@/store/actions.type";
-
+import { mapState } from "pinia";
+import { authStore } from "@/store/auth.module";
+const auth_store = authStore();
 export default {
   name: "RwvLogin",
   data() {
@@ -53,15 +54,13 @@ export default {
   },
   methods: {
     onSubmit(email, password) {
-      this.$store
-        .dispatch(LOGIN, { email, password })
-        .then(() => this.$router.push({ name: "home" }));
+      auth_store[LOGIN]({ email, password }).then(() =>
+        this.$router.push({ name: "home" })
+      );
     }
   },
   computed: {
-    ...mapState({
-      errors: state => state.auth.errors
-    })
+    ...mapState(authStore, ["errors"])
   }
 };
 </script>

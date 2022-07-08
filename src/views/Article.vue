@@ -52,14 +52,16 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import marked from "marked";
-import store from "@/store";
 import RwvArticleMeta from "@/components/ArticleMeta";
 import RwvComment from "@/components/Comment";
 import RwvCommentEditor from "@/components/CommentEditor";
 import RwvTag from "@/components/VTag";
 import { FETCH_ARTICLE, FETCH_COMMENTS } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
+import { articleStore } from "@/store/article.module";
+const article_store = articleStore();
 
 export default {
   name: "rwv-article",
@@ -77,14 +79,15 @@ export default {
   },
   beforeRouteEnter(to, from, next) {
     Promise.all([
-      store.dispatch(FETCH_ARTICLE, to.params.slug),
-      store.dispatch(FETCH_COMMENTS, to.params.slug)
+      article_store[FETCH_ARTICLE](to.params.slug),
+      article_store[FETCH_COMMENTS](to.params.slug)
     ]).then(() => {
       next();
     });
   },
   computed: {
-    ...mapGetters(["article", "currentUser", "comments", "isAuthenticated"])
+    ...mapState(articleStore, ["article", "comments"]),
+    ...mapState(authStore, ["currentUser", "isAuthenticated"])
   },
   methods: {
     parseMarkdown(content) {

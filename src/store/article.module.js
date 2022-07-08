@@ -1,4 +1,5 @@
-import Vue from "vue";
+import { defineStore } from "pinia";
+import { homeStore } from "./home.module";
 import {
   ArticlesService,
   CommentsService,
@@ -16,117 +17,103 @@ import {
   ARTICLE_EDIT_ADD_TAG,
   ARTICLE_EDIT_REMOVE_TAG,
   ARTICLE_DELETE,
-  ARTICLE_RESET_STATE
-} from "./actions.type";
-import {
+  ARTICLE_RESET_STATE,
   RESET_STATE,
   SET_ARTICLE,
   SET_COMMENTS,
   TAG_ADD,
   TAG_REMOVE,
   UPDATE_ARTICLE_IN_LIST
-} from "./mutations.type";
+} from "./actions.type";
 
-const initialState = {
-  article: {
-    author: {},
-    title: "",
-    description: "",
-    body: "",
-    tagList: []
-  },
-  comments: []
+export const state = () => {
+  return {
+    article: {
+      author: {},
+      title: "",
+      description: "",
+      body: "",
+      tagList: []
+    },
+    comments: []
+  };
 };
-
-export const state = { ...initialState };
 
 export const actions = {
-  async [FETCH_ARTICLE](context, articleSlug, prevArticle) {
+  async [FETCH_ARTICLE](articleSlug, prevArticle) {
     // avoid extronuous network call if article exists
     if (prevArticle !== undefined) {
-      return context.commit(SET_ARTICLE, prevArticle);
+      return this[SET_ARTICLE](prevArticle);
     }
     const { data } = await ArticlesService.get(articleSlug);
-    context.commit(SET_ARTICLE, data.article);
+    this[SET_ARTICLE](data.article);
     return data;
   },
-  async [FETCH_COMMENTS](context, articleSlug) {
+  async [FETCH_COMMENTS](articleSlug) {
     const { data } = await CommentsService.get(articleSlug);
-    context.commit(SET_COMMENTS, data.comments);
+    this[SET_COMMENTS](data.comments);
     return data.comments;
   },
-  async [COMMENT_CREATE](context, payload) {
+  async [COMMENT_CREATE](payload) {
     await CommentsService.post(payload.slug, payload.comment);
-    context.dispatch(FETCH_COMMENTS, payload.slug);
+    this[FETCH_COMMENTS](payload.slug);
   },
-  async [COMMENT_DESTROY](context, payload) {
+  async [COMMENT_DESTROY](payload) {
     await CommentsService.destroy(payload.slug, payload.commentId);
-    context.dispatch(FETCH_COMMENTS, payload.slug);
+    this[FETCH_COMMENTS](payload.slug);
   },
-  async [FAVORITE_ADD](context, slug) {
+  async [FAVORITE_ADD](slug) {
     const { data } = await FavoriteService.add(slug);
-    context.commit(UPDATE_ARTICLE_IN_LIST, data.article, { root: true });
-    context.commit(SET_ARTICLE, data.article);
+    const home = homeStore();
+    home[UPDATE_ARTICLE_IN_LIST](data.article);
+    this[SET_ARTICLE](data.article);
   },
-  async [FAVORITE_REMOVE](context, slug) {
+  async [FAVORITE_REMOVE](slug) {
     const { data } = await FavoriteService.remove(slug);
     // Update list as well. This allows us to favorite an article in the Home view.
-    context.commit(UPDATE_ARTICLE_IN_LIST, data.article, { root: true });
-    context.commit(SET_ARTICLE, data.article);
+    const home = homeStore();
+    home[UPDATE_ARTICLE_IN_LIST](data.article);
+    this[SET_ARTICLE](data.article);
   },
-  [ARTICLE_PUBLISH]({ state }) {
-    return ArticlesService.create(state.article);
+  [ARTICLE_PUBLISH]() {
+    return ArticlesService.create(this.article);
   },
-  [ARTICLE_DELETE](context, slug) {
+  [ARTICLE_DELETE](slug) {
     return ArticlesService.destroy(slug);
   },
-  [ARTICLE_EDIT]({ state }) {
-    return ArticlesService.update(state.article.slug, state.article);
+  [ARTICLE_EDIT]() {
+    return ArticlesService.update(this.article.slug, this.article);
   },
-  [ARTICLE_EDIT_ADD_TAG](context, tag) {
-    context.commit(TAG_ADD, tag);
+  [ARTICLE_EDIT_ADD_TAG](tag) {
+    this[TAG_ADD](tag);
   },
-  [ARTICLE_EDIT_REMOVE_TAG](context, tag) {
-    context.commit(TAG_REMOVE, tag);
+  [ARTICLE_EDIT_REMOVE_TAG](tag) {
+    this[TAG_REMOVE](tag);
   },
-  [ARTICLE_RESET_STATE]({ commit }) {
-    commit(RESET_STATE);
-  }
-};
-
-/* eslint no-param-reassign: ["error", { "props": false }] */
-export const mutations = {
-  [SET_ARTICLE](state, article) {
-    state.article = article;
+  [ARTICLE_RESET_STATE]() {
+    this[RESET_STATE]();
   },
-  [SET_COMMENTS](state, comments) {
-    state.comments = comments;
+  [SET_ARTICLE](article) {
+    this.article = article;
   },
-  [TAG_ADD](state, tag) {
-    state.article.tagList = state.article.tagList.concat([tag]);
+  [SET_COMMENTS](comments) {
+    this.comments = comments;
   },
-  [TAG_REMOVE](state, tag) {
-    state.article.tagList = state.article.tagList.filter(t => t !== tag);
+  [TAG_ADD](tag) {
+    this.article.tagList = this.article.tagList.concat([tag]);
+  },
+  [TAG_REMOVE](tag) {
+    this.article.tagList = this.article.tagList.filter((t) => t !== tag);
   },
   [RESET_STATE]() {
-    for (let f in state) {
-      Vue.set(state, f, initialState[f]);
-    }
+    this.$reset();
   }
 };
 
-const getters = {
-  article(state) {
-    return state.article;
-  },
-  comments(state) {
-    return state.comments;
-  }
-};
+const getters = {};
 
-export default {
+export const articleStore = defineStore("article", {
   state,
   actions,
-  mutations,
   getters
-};
+});

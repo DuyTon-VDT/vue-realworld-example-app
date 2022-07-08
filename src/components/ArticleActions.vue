@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapState } from "pinia";
 import {
   FAVORITE_ADD,
   FAVORITE_REMOVE,
@@ -37,7 +37,12 @@ import {
   FETCH_PROFILE_FOLLOW,
   FETCH_PROFILE_UNFOLLOW
 } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
+import { profileStore } from "@/store/profile.module";
+import { articleStore } from "@/store/article.module";
 
+const article_store = articleStore();
+const profile_store = profileStore();
 export default {
   name: "RwvArticleActions",
   props: {
@@ -45,7 +50,8 @@ export default {
     canModify: { type: Boolean, required: true }
   },
   computed: {
-    ...mapGetters(["profile", "isAuthenticated"]),
+    ...mapState(authStore, ["isAuthenticated"]),
+    ...mapState(profileStore, ["profile"]),
     editArticleLink() {
       return { name: "article-edit", params: { slug: this.article.slug } };
     },
@@ -74,7 +80,7 @@ export default {
         return;
       }
       const action = this.article.favorited ? FAVORITE_REMOVE : FAVORITE_ADD;
-      this.$store.dispatch(action, this.article.slug);
+      article_store[action](this.article.slug);
     },
     toggleFollow() {
       if (!this.isAuthenticated) {
@@ -84,13 +90,13 @@ export default {
       const action = this.article.following
         ? FETCH_PROFILE_UNFOLLOW
         : FETCH_PROFILE_FOLLOW;
-      this.$store.dispatch(action, {
+      profile_store[action]({
         username: this.profile.username
       });
     },
     async deleteArticle() {
       try {
-        await this.$store.dispatch(ARTICLE_DELETE, this.article.slug);
+        await article_store[ARTICLE_DELETE](this.article.slug);
         this.$router.push("/");
       } catch (err) {
         console.error(err);

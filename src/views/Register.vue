@@ -48,9 +48,11 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState } from "pinia";
 import { REGISTER } from "@/store/actions.type";
+import { authStore } from "@/store/auth.module";
 
+const auth_store = authStore();
 export default {
   name: "RwvRegister",
   data() {
@@ -61,19 +63,15 @@ export default {
     };
   },
   computed: {
-    ...mapState({
-      errors: state => state.auth.errors
-    })
+    ...mapState(authStore, ["errors"])
   },
   methods: {
     onSubmit() {
-      this.$store
-        .dispatch(REGISTER, {
-          email: this.email,
-          password: this.password,
-          username: this.username
-        })
-        .then(() => this.$router.push({ name: "home" }));
+      auth_store[REGISTER]({
+        email: this.email,
+        password: this.password,
+        username: this.username
+      }).then(() => this.$router.push({ name: "home" }));
     }
   }
 };
